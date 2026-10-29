@@ -1,0 +1,29 @@
+name: проверки стенда
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: типы (стенд)
+        run: npx tsc -b
+      - name: сборка стенда
+        run: npx vite build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: синтаксис прогонов
+        run: |
+          python -m py_compile koma/live.py koma/stand-check.py koma/probe.py
+          python -c "import json;json.load(open('koma/plugins/forge-emulator.json'))"
+          echo "плагин стенда читается, прогоны компилируются"
